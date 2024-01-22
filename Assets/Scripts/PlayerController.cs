@@ -1,7 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -10,8 +7,11 @@ public class PlayerController : MonoBehaviour
     private Rigidbody rb;
     private float movementX;
     private float movementY;
-    public float speed = 0;
-    // Start is called before the first frame update
+    private bool canJump = true;
+    public float speed = 5.0f;
+    public float jumpForce = 6.0f;
+    public float jumpCooldown = 1.0f; // Tiempo de cooldown en segundos
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -19,18 +19,16 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        if (Keyboard.current.spaceKey.wasPressedThisFrame)
+        if (Keyboard.current.spaceKey.wasPressedThisFrame && canJump)
         {
             Jump();
         }
     }
 
-    // Update is called once per frame
     void FixedUpdate()
     {
         Vector3 movement = new Vector3(movementX, 0.0f, movementY);
-
-        rb.AddForce(movement*speed);
+        rb.AddForce(movement * speed);
     }
 
     void OnMove(InputValue movementValue)
@@ -42,8 +40,15 @@ public class PlayerController : MonoBehaviour
 
     void Jump()
     {
-        Vector3 jump = new Vector3(0.0f, 6.0f, 0.0f);
+        Vector3 jump = new Vector3(0.0f, jumpForce, 0.0f);
         rb.AddForce(jump, ForceMode.Impulse);
+        canJump = false; // Desactiva la posibilidad de saltar
+        StartCoroutine(EnableJumpAfterCooldown()); // Inicia el temporizador de cooldown
     }
 
+    IEnumerator EnableJumpAfterCooldown()
+    {
+        yield return new WaitForSeconds(jumpCooldown);
+        canJump = true; // Activa la posibilidad de saltar después del cooldown
+    }
 }
